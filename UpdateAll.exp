@@ -10,6 +10,7 @@ set ArubaP ppppppppp
 set DsP ppppppppp
 set EsxiPath /etc/vmware/ssl
 set OpPath /etc
+# 192.168.1.1 is the lan ip of openwrt, enable tftp server on openwrt
 set TftpPath tftp://192.168.1.1
 set DsSynoArcPath /usr/syno/etc/certificate/_archive
 # user@DiskStation: Cat /usr/syno/etc/certificate/_archive/INFO to get the default cert dir name
