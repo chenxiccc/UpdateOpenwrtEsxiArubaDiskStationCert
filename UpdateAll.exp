@@ -12,7 +12,7 @@ set EsxiPath /etc/vmware/ssl
 set OpPath /etc
 set TftpPath tftp://192.168.1.1
 set DsSynoArcPath /usr/syno/etc/certificate/_archive
-# user@DiskStation: Cat /usr/syno/etc/certificate/_archive/INFO to get the default cert
+# user@DiskStation: Cat /usr/syno/etc/certificate/_archive/INFO to get the default cert dir name
 set Info ahadd
 set DsArcCertPath $DsSynoArcPath/$Info
 set DsDavCertPath /usr/local/etc/certificate/WebDAVServer/webdav
