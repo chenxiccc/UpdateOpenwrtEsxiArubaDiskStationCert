@@ -13,10 +13,12 @@ set OpPath /etc
 # 192.168.1.1 is the lan ip of openwrt, enable tftp server on openwrt
 set TftpPath tftp://192.168.1.1
 set DsSynoArcPath /usr/syno/etc/certificate/_archive
-# user@DiskStation: cat /usr/syno/etc/certificate/_archive/INFO to get the default cert dir name
-set Info ahadd
-set DsArcCertPath $DsSynoArcPath/$Info
+# user@DiskStation: cat /usr/syno/etc/certificate/_archive/DEFAULT to get the default cert dir name
+set Default ahadd
+set DsArcCertPath $DsSynoArcPath/$Default
+#cert path of WebDav
 set DsDavCertPath /usr/local/etc/certificate/WebDAVServer/webdav
+# user@DiskStation: cat /usr/syno/etc/certificate/_archive/INFO to get services, certs is placed at $DsSynoArcPath/$subscriber/$service
 set DsFtpCertPath /usr/syno/etc/certificate/smbftpd/ftpd
 set DsDefaultCertPath /usr/syno/etc/certificate/system/default
 # if your devices is under a router, set port forward for each device on router
