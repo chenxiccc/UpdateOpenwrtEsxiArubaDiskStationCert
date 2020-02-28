@@ -1,0 +1,147 @@
+#!/usr/bin/expect
+#Depend on acme.sh
+#issue cert with ' --renew -hook "expect UpdateAll.exp" ' or --reloadcmd "expect UpdateAll.exp" parameter
+
+set timeout 10 
+set SccCertPath /root/.acme.sh/domain.com
+set EsxiP ppppppppp
+set OpP ppppppppp
+set ArubaP ppppppppp
+set DsP ppppppppp
+set EsxiPath /etc/vmware/ssl
+set OpPath /etc
+set TftpPath tftp://192.168.1.1
+set DsSynoArcPath /usr/syno/etc/certificate/_archive
+# user@DiskStation: Cat /usr/syno/etc/certificate/_archive/INFO to get the default cert
+set Info ahadd
+set DsArcCertPath $DsSynoArcPath/$Info
+set DsDavCertPath /usr/local/etc/certificate/WebDAVServer/webdav
+set DsFtpCertPath /usr/syno/etc/certificate/smbftpd/ftpd
+set DsDefaultCertPath /usr/syno/etc/certificate/system/default
+set EsxiPort 1111
+set OpPort 2222
+set ArubaPort 3333
+set DsPort 4444
+set WanUrl domain.router.com
+
+#Update esxi Cert
+spawn scp -P $EsxiPort $SccCertPath/fullchain.cer root@$WanUrl:$EsxiPath/rui.crt
+expect { 
+    "yes/no" { send "yes\r";exp_continue } 
+    "Password:" { send "$EsxiP\r" }
+} 
+spawn scp -P $EsxiPort $SccCertPath/domain.com.key root@$WanUrl:$EsxiPath/rui.key
+expect { 
+    "yes/no" { send "yes\r";exp_continue } 
+    "Password:" { send "$EsxiP\r" }
+} 
+sleep 3
+spawn ssh -p $EsxiPort root@$WanUrl
+expect { 
+    "yes/no" { send "yes\r";exp_continue } 
+    "Password:" { send "$EsxiP\r" }
+} 
+expect "root@Esxi"
+send "chmod 600 $EsxiPath/rui.key && /etc/init.d/hostd restart && /etc/init.d/vpxa restart\r"
+expect "root@Esxi"
+send "exit\r"
+expect "root@server"
+exec sh -c {echo "$(date) Updated Esxi Cert Success" >> /root/.acme.sh/updateCert.log}
+
+#Update openwrt Cert
+spawn scp -P $OpPort $SccCertPath/fullchain.cer root@$WanUrl:$OpPath/uhttpd.crt
+expect { 
+    "yes/no" { send "yes\r";exp_continue } 
+    "password:" { send "$OpP\r" }
+} 
+spawn scp -P $OpPort $SccCertPath/domain.com.key root@$WanUrl:$OpPath/uhttpd.key
+expect { 
+    "yes/no" { send "yes\r";exp_continue } 
+    "password:" { send "$OpP\r" }
+} 
+expect "root@server"
+sleep 3
+spawn ssh -p $OpPort root@$WanUrl
+expect { 
+    "yes/no" { send "yes\r";exp_continue } 
+    "password:" { send "$OpP\r" }
+} 
+expect "root@OpenWrt"
+send "/etc/init.d/uhttpd restart\r"
+expect "root@OpenWrt"
+send "exit\r"
+expect "root@server"
+exec sh -c {echo "$(date) Updated Openwrt Cert Success" >> /root/.acme.sh/updateCert.log}
+
+#Convert To Aruba pem cert & scp to openwrt
+exec sh -c {rm -f /root/.acme.sh/domain.com/domain.com.pem && rm -f /root/.acme.sh/domain.com/domain.com.key.unsecure && openssl rsa -in /root/.acme.sh/domain.com/domain.com.key -out /root/.acme.sh/domain.com/domain.com.key.unsecure && cat /root/.acme.sh/domain.com/domain.com.key.unsecure /root/.acme.sh/domain.com/fullchain.cer >/root/.acme.sh/domain.com/domain.com.pem} 1>/dev/null 2>/dev/null
+spawn scp -P $OpPort $SccCertPath/domain.com.pem root@$WanUrl:/tmp/domain.com.pem
+expect { 
+    "yes/no" { send "yes\r";exp_continue } 
+    "password:" { send "$OpP\r" }
+} 
+sleep 3
+spawn ssh -p $ArubaPort user@$WanUrl
+expect { 
+    "yes/no" { send "yes\r";exp_continue } 
+    "password:" { send "$ArubaP\r" }
+} 
+expect "iap207-1-keting"
+send "download-cert ui $TftpPath/domain.com.pem format pem\r"
+expect "iap207-1-keting"
+send "exit\r"
+expect "root@server"
+exec sh -c {echo "$(date) Updated Aruba Cert Success" >> /root/.acme.sh/updateCert.log}
+
+#Update DiskStation Cert :_archiev,ftp,default,webdav
+spawn ssh -p $DsPort user@$WanUrl
+expect { 
+    "yes/no" { send "yes\r";exp_continue } 
+    "password:" { send "$DsP\r" }
+} 
+expect "user@DiskStation"
+send "mkdir -p /tmp/cert\r"
+expect "user@DiskStation"
+send "exit\r"
+expect "root@server"
+spawn scp -P $DsPort $SccCertPath/fullchain.cer user@$WanUrl:/tmp/cert/fullchain.pem
+expect { 
+    "yes/no" { send "yes\r";exp_continue } 
+    "password:" { send "$DsP\r" }
+} 
+spawn scp -P $DsPort $SccCertPath/ca.cer user@$WanUrl:/tmp/cert/chain.pem
+expect { 
+    "yes/no" { send "yes\r";exp_continue } 
+    "password:" { send "$DsP\r" }
+} 
+spawn scp -P $DsPort $SccCertPath/domain.com.key user@$WanUrl:/tmp/cert/privkey.pem
+expect { 
+    "yes/no" { send "yes\r";exp_continue } 
+    "password:" { send "$DsP\r" }
+} 
+spawn scp -P $DsPort $SccCertPath/domain.com.cer user@$WanUrl:/tmp/cert/cert.pem
+expect { 
+    "yes/no" { send "yes\r";exp_continue } 
+    "password:" { send "$DsP\r" }
+} 
+expect "root@server"
+sleep 3
+spawn ssh -p $DsPort user@$WanUrl
+expect { 
+    "yes/no" { send "yes\r";exp_continue } 
+    "password:" { send "$DsP\r" }
+} 
+expect "user@DiskStation"
+send "sudo -i\r"
+expect "Password:"
+send "$DsP\r"
+expect "root@DiskStation"
+send "cp -f /tmp/cert/*.* $DsArcCertPath/ && cp -f /tmp/cert/*.* $DsDavCertPath/ && cp -f /tmp/cert/*.* $DsFtpCertPath/ && cp -f /tmp/cert/*.* $DsDefaultCertPath/\r"
+expect "root@DiskStation"
+send "/usr/syno/etc/rc.sysv/nginx.sh reload\r"
+expect "root@DiskStation"
+send "exit\r"
+expect "user@DiskStation"
+send "exit\r"
+expect "root@server"
+exec sh -c {echo "$(date) Updated DiskStation Cert Success" >> /root/.acme.sh/updateCert.log}
