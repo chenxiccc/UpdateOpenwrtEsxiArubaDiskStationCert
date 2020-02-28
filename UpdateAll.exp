@@ -18,10 +18,12 @@ set DsArcCertPath $DsSynoArcPath/$Info
 set DsDavCertPath /usr/local/etc/certificate/WebDAVServer/webdav
 set DsFtpCertPath /usr/syno/etc/certificate/smbftpd/ftpd
 set DsDefaultCertPath /usr/syno/etc/certificate/system/default
+# if your devices is under a router, set port forward for each device on router
 set EsxiPort 1111
 set OpPort 2222
 set ArubaPort 3333
 set DsPort 4444
+# your router's wan url or ip
 set WanUrl domain.router.com
 
 #Update esxi Cert
